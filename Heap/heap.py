@@ -67,7 +67,12 @@ class BinaryHeap:
         return self.size
     
     def build_heap(self, list):
-        pass
+        i = len(list) // 2
+        self.heap_list = [0] + list[:]
+        self.size = len(list)
+        while i > 0:
+            self._percolate_down(i)
+            i -= 1
 
     def __str__(self):
         return str(self.heap_list[1:])
@@ -82,6 +87,8 @@ class BinaryHeap:
         return None? (Perhaps look at heapq implementation)
     2.  how to do return by value in Python? Isn't it dangerous to return
         a list element in case its mutable?
+    3.  Why does build_heap() work? Can you prove that the heap order invariant
+        is restored by the end of build_heap()?
 """
 
 
