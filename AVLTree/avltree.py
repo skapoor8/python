@@ -1,12 +1,17 @@
 """
-    Purpose:    To create a Binary Search Tree ADT
-    Filename:   bst.py
+    Purpose:    To create a AVL Tree ADT
+    Filename:   avltree.py
     Author:     Siddharth Kapoor
-    Date:       May 6, 2020
+    Date:       May 12, 2020
 
+    Questions:
+    1.  Why do we no longer need to update the parents balance factor if a node
+        is rotated around? Could there not be a situation where after rotation
+        the balance factor changes from 2 to 1, or -2 to -1?
+    2.  How to handle deletion with AVL Tree?
 """
 
-class BinarySearchTree:
+class AVLTree:
         
     def __init__(self):
         self.root = None
@@ -44,12 +49,84 @@ class BinarySearchTree:
             else:
                 current_node.left_child = TreeNode(k, v, parent=current_node)
                 self.size += 1
+                self._update_balance(current_node.left_child)
         else:
             if current_node.has_right_child():
                 self._put(k, v, current_node.right_child)
             else:
                 current_node.right_child = TreeNode(k, v, parent=current_node)
                 self.size += 1
+                self._update_balance(current_node.right_child)
+
+    def _update_balance(self, node):
+        if node.balance_factor > 1 or node.balance_factor < -1:
+            self._rebalance(node)
+            return
+        if node.parent != None:
+            if node.is_left_child():
+                node.parent.balance_factor += 1
+            elif node.is_right_child():
+                node.parent.balance_factor -= 1
+            
+            if node.parent.balance_factor != 0:
+                self._update_balance(node.parent)
+    
+    def _rebalance(self, node):
+        if node.balance_factor < 0:
+            if node.right_child.balance_factor > 0:
+                self._rotate_right(node.right_child)
+                self._rotate_left(node)
+            else:
+                self._rotate_left(node)
+        elif node.balance_factor > 0:
+            if node.left_child.balance_factor < 0:
+                self._rotate_left(node.left_child)
+                self._rotate_right(node)
+            else:
+                self._rotate_right(node)
+    
+    def _rotate_left(self, rot_root):
+        print("left rotation at", rot_root.key)
+        new_root = rot_root.right_child
+        rot_root.right_child = new_root.left_child
+        if new_root.left_child != None:
+            new_root.left_child.parent = rot_root
+        new_root.parent = rot_root.parent
+        if rot_root.is_root():
+            self.root = new_root
+        else:
+            if rot_root.is_left_child():
+                rot_root.parent.left_child = new_root
+            else:
+                rot_root.parent.right_child = new_root
+        new_root.left_child = rot_root
+        rot_root.parent = new_root
+        rot_root.balance_factor = rot_root.balance_factor + 1 \
+                                - min(new_root.balance_factor, 0)
+        new_root.balance_factor = new_root.balance_factor + 1 \
+                                + max(rot_root.balance_factor, 0)
+    
+    def _rotate_right(self, rot_root):
+        print("right rotation at", rot_root.key)
+        new_root = rot_root.left_child
+        rot_root.left_child = new_root.right_child
+        if new_root.right_child != None:
+            new_root.right_child.parent = rot_root
+        new_root.parent = rot_root.parent
+        if rot_root.is_root():
+            self.root = new_root
+        else:
+            if rot_root.is_left_child():
+                rot_root.parent.left_child = new_root
+            else:
+                rot_root.parent.right_child = new_root
+        new_root.right_child = rot_root
+        rot_root.parent = new_root
+        rot_root.balance_factor = rot_root.balance_factor - 1 \
+                                - max(new_root.balance_factor, 0)
+        new_root.balance_factor = new_root.balance_factor - 1 \
+                                + min(rot_root.balance_factor, 0)
+        
 
     def __setitem__(self, k, v):
         self.put(k, v)
@@ -104,10 +181,15 @@ class BinarySearchTree:
         if current_node.is_leaf():
             if current_node == current_node.parent.left_child:
                 current_node.parent.left_child = None 
+                current_node.parent.balance_factor -= 1
+                print("immediately after removing 13", str(self))
+                self._update_balance_after_remove(current_node.parent)
                 # does this delete the node from memory, it still contains references
                 # to existing nodes
             else:
                 current_node.parent.right_child = None
+                current_node.parent.balance_factor += 1
+                self._update_balance_after_remove(current_node.parent)
         elif current_node.has_both_children():
             successor = current_node.find_successor()
             #successor.splice_out()
@@ -119,31 +201,56 @@ class BinarySearchTree:
                 if current_node.is_left_child():
                     current_node.parent.left_child = current_node.left_child
                     current_node.left_child.parent = current_node.parent
+                    current_node.parent.balance_factor -= 1
+                    self._update_balance_after_remove(current_node.parent)
                 elif current_node.is_right_child():
                     current_node.parent.right_child = current_node.left_child
                     current_node.left_child.parent = current_node.parent
+                    current_node.parent.balance_factor += 1
+                    self._update_balance_after_remove(current_node.parents)
                 else:
                     current_node.replace_node_data(current_node.left_child.key,
                                         current_node.left_child.value, 
                                         current_node.left_child.left_child,
-                                        current_node.left_child.right_child)
+                                        current_node.left_child.right_child,
+                                        current_node.balance_factor)
             else:
                 if current_node.is_left_child():
                     current_node.parent.left_child = current_node.right_child
                     current_node.right_child.parent = current_node.parent
+                    current_node.parent.balance_factor -= 1
+                    self._update_balance_after_remove(current_node.parent)
                 elif current_node.is_right_child():
                     current_node.parent.right_child = current_node.right_child
                     current_node.right_child.parent = current_node.parent
+                    current_node.parent.balance_factor += 1
+                    self._update_balance_after_remove(current_node.parent)
                 else:
                     current_node.replace_node_data(current_node.right_child.key,
                                         current_node.right_child.value,
                                         current_node.right_child.left_child,
-                                        current_node.right_child.right_child)
+                                        current_node.right_child.right_child,
+                                        current_node.balance_factor)
+    
+    def _update_balance_after_remove(self, node):
+        if node.balance_factor > 1 or node.balance_factor < -1:
+            self._rebalance(node)
+            node = node.parent # the rotated node has moved down the tree
+        print("after rebalance at", node.key, str(self))
+        if node.balance_factor == 1 or node.balance_factor == -1:
+            return
+        if node.parent != None and node.balance_factor == 0:
+            if node.is_left_child():
+                node.parent.balance_factor -= 1
+            elif node.is_right_child():
+                node.parent.balance_factor += 1
+            self._update_balance_after_remove(node.parent)
 
     def __str__(self):
         result = 'BST{'
         for k in self:
-            result += str(k) + ':' + str(self[k]) + ', '
+            result += str(k) + ':' + str(self[k]) + ':' + \
+                        str(self._get(k, self.root).balance_factor) + ', '
         result += '}'
         return result
     
@@ -159,6 +266,7 @@ class TreeNode:
     def __init__(self, key, val, left=None, right=None, parent=None):
         self.key = key
         self.value = val
+        self.balance_factor = 0
         self.left_child = left
         self.right_child = right
         self.parent = parent
@@ -190,7 +298,7 @@ class TreeNode:
     def has_both_children(self):
         return self.left_child and self.right_child
     
-    def replace_node_data(self, key, val, lc, rc):
+    def replace_node_data(self, key, val, lc, rc, bf):
         self.key = key
         self.value = val
         self.left_child = lc
@@ -199,6 +307,7 @@ class TreeNode:
             self.left_child.parent = self
         if self.has_right_child():
             self.right_child.parent = self
+        self.balance_factor = bf
     
     def __iter__(self):
         if self:
@@ -252,126 +361,16 @@ class TreeNode:
                 self.right_child.parent = self.parent
 
 
-
-b = BinarySearchTree()
-b[10] = 10
-b[5] = 5
-b[15] = 15
-b[3] = 3
-b[6] = 6
-print(b)     
-del b[5]
-print(b)  
-del b[10]
-print(b)
-"""
-b = BinarySearchTree()
-b.put(5,5)
-b[2] = 2
-print(b)
-b[2] = 22
-b[6] = 6
-print("b[2] is", b[2])
-print("Is 7 in BST?", 7 in b)
-print(b)
-del b[2]
-print(b)
-
-for k in b:
-    print(k)
-
-empty = BinarySearchTree()
-if 3 in empty:
-    print('This is unexpected.')
-for k in empty:
-    print('iterating empty BST')
-
-# del empty[0]
-
-print(b)
-b[2] = 2
-print(b)
-b[4] = 4
-b[1] = 1
-b[7] = 7
-print(b)
-
-del b[7]
-print(b)
-
-b[7] = 7
-del b[6]
-print(b)
-b[6] = 6
-print(b)
-del b[7]
-print(b)
-b[8] = 8
-print(b)
-del b[2]
-print(b)
-b[4.5] =4.5
-print(b)
-"""
-"""
-Questions:
-    1.  What would be the behavior of calling __contains__ on empty tree?
-        KeyError? What is idiomatic execution of contains method?
-
-        __contains__ returns False if map does not contain the key, true
-        otherwise. __getitem__ returns KeyError if map does not have the key.
-        This is as per Python 3's map ADT spec.
-
-    2.  What would be the behavior of iterating through empty BST?
-
-        As per map ADT, there should be no iteration. In linked structures that
-        internally use nodes, the class __iter__() function that calls the 
-        node's __iter__() function can return an empty iterable object iter(())
-        since the node's iterator will never be accessed
-
-        Alternately, the data structure class can implement the iterator instead
-        of relying on the node class to do so
-
-
-    3.  Can something that is still referred to by a variable be deleted, 
-        like a node in a tree that is still referred to by a variable outside 
-        the class?
-
-        As long as there is an active reference to the object, the object will 
-        persist in memory. This is why it is good to have some idiomatic way
-        of indicating that a node has been deleted, like setting a node 
-        attribute or making self.parent = self
-
-    4.  What are other ways to implement a BST? Other patterns? It might take
-        time to figure that out
-
-        Look at other implementations
-
-    5.  There is a lot of repeated code here. Could we use functions to reduce
-        the probablity of errors on updates? Would this badly affect 
-        performance?
-
-        Readability is the first priority, so avoiding duplication is good.
-
-    6.  Is it possible for right subtree of a node to contain values smaller
-        than it due to rotation?
-
-        No, deeper nodes in a BST are added after nodes above them. This ensures
-        that right subtree can only contain values greater than the parent
-        node. Rotation is executed to preserve this invariant, so this should
-        be the case even after rotations.
-
-    7.  What are the invariants for a binary tree?
-            -   right child is greater than node, left child is smaller
-            -   inorder nodes are sorted
-    
-    8.  Are getters and setter the pythonic way of doing things? In C++
-        data is made private for encapsulation. But not in python.
-
-        Look at OOP Patterns in python. A good resource could be the book
-        Effective Python
-
-    9.  Why doesn't replace_node_data() change parent reference?
-
-        Unclear
-"""
+A = AVLTree()
+A[10] = 10
+A[5] = 5
+A[15] = 15
+A[0] = 0
+A[20] = 20
+A[13] = 13
+A[-1] = -1
+print(A)
+A[25] = 25
+print(A)
+del A[13]
+print(A)
