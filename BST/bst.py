@@ -12,11 +12,11 @@ class BinarySearchTree:
         self.root = None
         self.size = 0
     
-    def length(self):
-        return self.size
-    
     def __len__(self):
         return self.size # why not call length()
+
+    def length(self):
+        return len(self)  
 
     def is_empty(self):
         return self.root is None
@@ -86,7 +86,7 @@ class BinarySearchTree:
     def delete(self, k):
         if self.size > 1:
             node_to_remove = self._get(k, self.root)
-            if node_to_remove: # _get() should not raise errors if this way
+            if node_to_remove: 
                 self._remove(node_to_remove)
                 self.size -= 1
             else:
@@ -252,6 +252,7 @@ class TreeNode:
                 self.right_child.parent = self.parent
 
 
+"""
 
 b = BinarySearchTree()
 b[10] = 10
@@ -264,7 +265,7 @@ del b[5]
 print(b)  
 del b[10]
 print(b)
-"""
+
 b = BinarySearchTree()
 b.put(5,5)
 b[2] = 2

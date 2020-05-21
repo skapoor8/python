@@ -18,7 +18,7 @@ class AVLTree:
         self.size = 0
     
     def length(self):
-        return self.size
+        return len(self)
     
     def __len__(self):
         return self.size # why not call length()
@@ -247,12 +247,20 @@ class AVLTree:
             self._update_balance_after_remove(node.parent)
 
     def __str__(self):
-        result = 'BST{'
+        result = 'AVL{'
+        for k in self:
+            result += str(k) + ':' + str(self[k]) + ', '
+        result += '}'
+        return result
+    
+    def verbose_string(self):
+        result = 'AVL{'
         for k in self:
             result += str(k) + ':' + str(self[k]) + ':' + \
                         str(self._get(k, self.root).balance_factor) + ', '
         result += '}'
         return result
+
     
     def __repr__(self):
         return self.__str__()
@@ -360,7 +368,7 @@ class TreeNode:
                     self.parent.right_child = self.right_child
                 self.right_child.parent = self.parent
 
-
+"""
 A = AVLTree()
 A[10] = 10
 A[5] = 5
@@ -374,3 +382,4 @@ A[25] = 25
 print(A)
 del A[13]
 print(A)
+"""
