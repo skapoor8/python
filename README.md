@@ -67,5 +67,7 @@ $ python3 test_avltree.py
 - [ ] Clean up files - add comments, remove print stubs
 
 ## Credits
-Implementations are based on Problem Solving with Data Structures and Algorithms
-in Python 2e, Data Structures and Algorithms in Python 1e, CLRS 2e.
+Implementations are based on 
+1. Problem Solving with Data Structures and Algorithms in Python 2e
+2. Data Structures and Algorithms in Python 1e
+3. CLRS 2e.
