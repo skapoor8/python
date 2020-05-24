@@ -1,5 +1,8 @@
 """
     Purpose: Make a deque ADT
+    Filename:   test_bst.py
+    Author:     Siddharth Kapoor
+    Date:       April 9, 2020
 """
 
 class Deque:

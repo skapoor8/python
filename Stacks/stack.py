@@ -1,7 +1,9 @@
 """
-    Purpose: Make a stack ADT that supports 
+    Purpose:    To test my implementation of Binary Search Tree ADT
+    Filename:   test_bst.py
+    Author:     Siddharth Kapoor
+    Date:       April 10, 2020
 """
-
 class Stack:
     def __init__(self):
         self.items = []

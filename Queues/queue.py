@@ -1,5 +1,8 @@
 """
-    Purpose: Make a queue ADT that supports 
+    Purpose:    Make a queue ADT that supports 
+    Filename:   queue.py
+    Author:     Siddharth Kapoor
+    Date:       April 9, 2020
 """
 
 class Queue:

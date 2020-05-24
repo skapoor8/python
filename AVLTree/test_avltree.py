@@ -1,3 +1,10 @@
+"""
+    Purpose:    To create a AVL Tree ADT
+    Filename:   test_avltree.py
+    Author:     Siddharth Kapoor
+    Date:       May 16, 2020
+"""
+
 from avltree import AVLTree, TreeNode
 from unittest import TestCase, main
 

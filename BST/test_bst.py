@@ -1,3 +1,10 @@
+"""
+    Purpose:    To test my implementation of Binary Search Tree ADT
+    Filename:   test_bst.py
+    Author:     Siddharth Kapoor
+    Date:       May 6, 2020
+"""
+
 from bst import BinarySearchTree, TreeNode
 from unittest import TestCase, main
 

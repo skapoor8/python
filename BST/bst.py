@@ -3,7 +3,6 @@
     Filename:   bst.py
     Author:     Siddharth Kapoor
     Date:       May 6, 2020
-
 """
 
 class BinarySearchTree:
