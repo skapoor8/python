@@ -1,0 +1,434 @@
+{% extends "admin_layout.html" %}
+
+{% block head %}
+
+  <script>
+  $(function() {
+      // Call GetUsers() to get the data out of the JSON
+      // Starting at Page 1
+      GetUsers(1)
+
+      // Process a button Click from the Update Modal Dialog
+      $('#btnUpdate').click(function() {
+          $.ajax({
+              url: '/updateUser',
+              data : {
+                id:localStorage.getItem('editId'),
+                first_name:$('#editFirstName').val(),
+                last_name:$('#editLastName').val(),
+                oyd_id:$('#editOYDID').val(),
+                username:$('#editUsername').val(),
+                password:$('#editPassword').val(),
+                password2:$('#editPassword2').val(),
+                access_level:$('#selectAccessLevel').val(),
+                def_school:$('#editDefSchool').val(),
+                def_region:$('#editDefRegion').val(),
+                def_nat_area:$('#editDefNatArea').val(),
+                school_list:$('#editSchoolList').val(),
+                region_list:$('#editRegionList').val(),
+              },
+              type: 'POST',
+              success: function(res) {
+                  $('#editModal').modal('hide');
+
+                  // Re-populate the grid
+                  GetUsers(1);
+              },
+              error: function(error) {
+                  console.log(error.responseText);
+                  alert(error.responseText);
+              }
+          })   // end of $.ajax
+      });
+
+      $('document').on('click','.navigation li a',function(){
+           console.log('me in');
+      });
+  });
+
+  // This function presents users, 10 per page
+function GetUsers(_page) {
+
+    var _offset = (_page - 1) * 10;
+
+    $.ajax({
+        url: '/getUsers',
+        type: 'POST',
+        data: {
+            offset: _offset
+        },
+        success: function(res) {
+
+            var itemsPerPage = 10;
+
+            var userObj = JSON.parse(res);
+
+            // $('#ulist').empty();
+            // $('#listTemplate').tmpl(userObj[0]).appendTo('#ulist');
+            $('#utablebody').empty();
+            $('#tableTemplate').tmpl(userObj[0]).appendTo('#utablebody');
+
+            var total = userObj[1]['total'];
+            var pageCount = total / itemsPerPage;
+            var pageRem = total % itemsPerPage;
+            if (pageRem != 0) {
+                pageCount = Math.floor(pageCount) + 1;
+            }
+
+            $('.pagination').empty();
+
+            var pageStart = $('#hdnStart').val();
+            var pageEnd = $('#hdnEnd').val();
+
+            if (pageStart > 5) {
+                var aPrev = $('<a/>').attr({
+                        'href': '#'
+                    }, {
+                        'aria-label': 'Previous'
+                    })
+                    .append($('<span/>').attr('aria-hidden', 'true').html('&laquo;'));
+
+                $(aPrev).click(function() {
+                    $('#hdnStart').val(Number(pageStart) - 5);
+                    $('#hdnEnd').val(Number(pageStart) - 5 + 4);
+                    GetUsers(Number(pageStart) - 5);
+                });
+
+                var prevLink = $('<li/>').append(aPrev);
+                $('.pagination').append(prevLink);
+            }
+
+            for (var i = Number(pageStart); i <= Number(pageEnd); i++) {
+
+                if (i > pageCount) {
+                    break;
+                }
+
+                var aPage = $('<a/>').attr('href', '#').text(i);
+
+                $(aPage).click(function(i) {
+                    return function() {
+                        GetUsers(i);
+                    }
+                }(i));
+                var page = $('<li/>').append(aPage);
+
+                if ((_page) == i) {
+                    $(page).attr('class', 'active');
+                }
+
+                $('.pagination').append(page);
+            }
+
+            if ((Number(pageStart) + 5) <= pageCount) {
+                var nextLink = $('<li/>').append($('<a/>').attr({
+                        'href': '#'
+                    }, {
+                        'aria-label': 'Next'
+                    })
+                    .append($('<span/>').attr('aria-hidden', 'true').html('&raquo;').click(function() {
+                        $('#hdnStart').val(Number(pageStart) + 5);
+                        $('#hdnEnd').val(Number(pageStart) + 5 + 4);
+                        GetUsers(Number(pageStart) + 5);
+
+                    })));
+                $('.pagination').append(nextLink);
+            }
+
+        },
+        error: function(error) {
+            console.log(error);
+        }
+    });
+  }
+
+  function ConfirmDelete(elem) {
+      console.log('in ConfirmDelete')
+      localStorage.setItem('deleteId', $(elem).attr('data-id'));
+      $('#deleteModal').modal();
+  }
+
+  function Delete() {
+      $.ajax({
+          url: '/deleteUser',
+            data: {
+                id: localStorage.getItem('deleteId')
+            },
+            type: 'POST',
+            success: function(res) {
+                var result = JSON.parse(res);
+                if (result.status == 'OK') {
+                    $('#deleteModal').modal('hide');
+                    GetUsers(1);
+                } else {
+                    alert(result.status);
+                }
+            },
+            error: function(error) {
+                console.log(error);
+            }
+      });
+  }
+
+  function Edit(elm) {
+      localStorage.setItem('editId',$(elm).attr('data-id'));
+      $.ajax({
+          url: '/getUserById',
+          data: {
+              id: $(elm).attr('data-id')
+          },
+          type: 'POST',
+          success: function(res) {
+              var data = JSON.parse(res);
+
+              //$('#imgUpload').attr('src', data[0]['FilePath']);
+
+              $('#editFirstName').val(data[0]['first_name']);
+              $('#editLastName').val(data[0]['last_name']);
+              $('#editOYDID').val(data[0]['oyd_id']);
+              $('#editUsername').val(data[0]['username']);
+              $('#editPassword').val('');
+              $('#editPassword2').val('');
+              $('#selectAccessLevel').val(data[0]['access_level']);
+              $('#editDefSchool').val(data[0]['def_school']);
+              $('#editDefRegion').val(data[0]['def_region']);
+              $('#editDefNatArea').val(data[0]['def_nat_area']);
+              $('#editSchoolList').val(data[0]['school_list']);
+              $('#editRegionList').val(data[0]['region_list']);
+
+              $('#editModal').modal();
+          },
+          error: function(error) {
+              console.log(error);
+          }
+      });
+  }
+  </script>
+
+  <style>
+      .trash {
+          color: rgb(209, 91, 71);
+      }
+      .panel-body .checkbox {
+          display: inline-block;
+          margin: 0px;
+      }
+      .list-group {
+          margin-bottom: 0px;
+      }
+  </style>
+
+  <style>
+      .btn-file {
+          position: relative;
+          overflow: hidden;
+      }
+      .btn-file input[type=file] {
+          position: absolute;
+          top: 0;
+          right: 0;
+          min-width: 100%;
+          min-height: 100%;
+          font-size: 100px;
+          text-align: right;
+          filter: alpha(opacity=0);
+          opacity: 0;
+          outline: none;
+          background: white;
+          cursor: inherit;
+          display: block;
+      }
+  </style>
+
+{% endblock %}
+
+{% block content %}
+
+  <div class="container-fluid">
+    <div class="header">
+    </div>
+      <h2>User List</h2>
+
+    <!-- Script for the following Table -->
+    <script id="tableTemplate" type="text/x-jQuery-tmpl">
+      <tr>
+        <td>${username}</td>
+        <td>${first_name}</td>
+        <td>${last_name}</td>
+        <td>${oyd_id}</td>
+        <td>${access_level}</td>
+        <td>${def_school}</td>
+        <td>${def_region}</td>
+        <td>${def_nat_area}</td>
+        <td>${school_list}</td>
+        <td>${region_list}</td>
+        <td>
+          <div class="pull-right action-buttons">
+            <a data-id=${Id} onclick="Edit(this)"><span class="glyphicon glyphicon-pencil"></span></a>
+            <a data-id=${Id} onclick="ConfirmDelete(this)" ><span class="glyphicon glyphicon-trash"></span></a>
+          </div>
+        </td>
+      </tr>
+    </script>
+
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Username</th>
+          <th>First name</th>
+          <th>Last name</th>
+          <th>OYD Id</th>
+          <th>Access Level</th>
+          <th>Default School</th>
+          <th>Default Region</th>
+          <th>Default Nat Area</th>
+          <th>School List</th>
+          <th>Region List</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="utablebody">
+        <tr>
+          <!-- the table rows are created automatically -->
+        </tr>
+      </tbody>
+    </table>
+    <nav>
+      <ul class="pagination">
+          <!-- Pagination li created dynamically -->
+      </ul>
+    </nav>
+
+    <!-- Modal Dialog Box to Edit the List Entry -->
+    <div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span>
+                    </button>
+                    <h4 class="modal-title" id="editModalLabel">Update User</h4>
+                </div>
+                <div class="modal-body">
+                    <form role="form">
+                        <!-- First Name input -->
+                        <div class="form-group">
+                            <label for="editFirstName" class="control-label">First Name:</label>
+                            <input type="text" class="form-control" id="editFirstName">
+                        </div>
+
+                        <!-- Last Name input -->
+                        <div class="form-group">
+                            <label for="editLastName" class="control-label">Last Name:</label>
+                            <input type="text" class="form-control" id="editLastName">
+                        </div>
+
+                        <!--  OYD ID input -->
+                        <div class="form-group">
+                            <label for="editOYDID" class="control-label">OYD Id:</label>
+                            <input type="text" class="form-control" id="editOYDID">
+                        </div>
+
+                        <!-- Username input-->
+                        <div class="form-group">
+                            <label for="editUsername" class="control-label">Username:</label>
+                            <input type="text" class="form-control" id="editUsername">
+                        </div>
+
+                        <!-- Clear Text Password input-->
+                        <div class="form-group">
+                            <label for="editPassword" class="control-label">New Password:</label>
+                            <input type="password" class="form-control" id="editPassword">
+                        </div>
+
+                        <!-- Clear Text Password repeated input-->
+                        <div class="form-group">
+                            <label for="editPassword2" class="control-label">Confirm New Password:</label>
+                            <input type="password" class="form-control" id="editPassword2">
+                        </div>
+
+                        <!-- ??? change this to a data driven select -->
+                        <!-- Access Level Selector -->
+                        <div class="form-group">
+                          <label for="selectAccessLevel" class="control-label">Access Level:</label>
+                          <select class="form-control" id="selectAccessLevel">
+                            <option value="0">Admin</option>
+                            <option value="1">National</option>
+                            <option value="2">Regional</option>
+                            <option value="3">Multi-School</option>
+                            <option value="4">School</option>
+                            <option value="5">Intern</option>
+                          </select>
+                        </div>
+
+                        <!-- ??? change this to a data driven select -->
+                        <!-- Default School input-->
+                        <div class="form-group">
+                            <label for="editDefSchool" class="control-label">Default School:</label>
+                            <input type="text" class="form-control" id="editDefSchool">
+                        </div>
+
+                        <!-- ??? change this to a data driven select -->
+                        <!-- Default Region input-->
+                        <div class="form-group">
+                            <label for="editDefRegion" class="control-label">Default Region:</label>
+                            <input type="text" class="form-control" id="editDefRegion">
+                        </div>
+
+                        <!-- ??? change this to a data driven select -->
+                        <!-- Default National Area input-->
+                        <div class="form-group">
+                            <label for="editDefNatArea" class="control-label">Default Nat Area:</label>
+                            <input type="text" class="form-control" id="editDefNatArea">
+                        </div>
+
+                        <!-- ??? change this to a data driven select -->
+                        <!-- Default State input-->
+                        <div class="form-group">
+                            <label for="editSchoolList" class="control-label">School List:</label>
+                            <input type="text" class="form-control" id="editSchoolList">
+                        </div>
+
+                        <!-- ??? change this to a data driven select -->
+                        <!-- Default State input-->
+                        <div class="form-group">
+                            <label for="editRegionList" class="control-label">Region List:</label>
+                            <input type="text" class="form-control" id="editRegionList">
+                        </div>
+
+                    </form>
+                </div>
+
+                <!-- Update and Close buttons -->
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <!-- the following does not need a onclick call due
+                        to the ('#btnUpdate').click(function() -->
+                    <button type="button" id="btnUpdate" class="btn btn-primary">Update</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Dialog Box to Delete the List Entry-->
+    <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header" style="text-align:center;">
+                    <h4 class="modal-title" style="color:red;" id="deleteModalLabel">Confirm Delete User !!</h4>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="Delete()">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- hidden input fields to store values -->
+    <input type="hidden" id="hdnStart" value="1" />
+    <input type="hidden" id="hdnEnd" value="5"/>
+
+  </div>
+
+{% endblock %}

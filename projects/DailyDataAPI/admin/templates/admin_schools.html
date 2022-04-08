@@ -1,0 +1,459 @@
+{% extends "admin_layout.html" %}
+
+{% block head %}
+
+  <script>
+  $(function() {
+      // Call GetSchools() to get the data out of the JSON Starting at Page 1
+      GetSchools(1)
+
+      // Process a button Click from the Update Modal Dialog
+      $('#btnUpdate').click(function() {
+
+          // retrieve the ui object from localStorage
+          var uiCount = localStorage.getItem('uiCount');
+          ui2 = {};
+          for (i = 0; i < uiCount; i++) {
+              lbl = 'ui' + i.toString();
+              var item = JSON.parse(localStorage.getItem(lbl));
+              ui2[i] = item;
+          }
+
+          // retrive the data from the edit dialog
+          ret_data = {school_id:localStorage.getItem("editId")};
+          for (var key in ui2) {
+              var en = '#' + ui2[key]['edit_name'];
+              var lbl = ui2[key]['item'];
+              ret_data[lbl] = $(en).val();
+          }
+
+          $.ajax({
+              url: '/updateSchool',
+              data : ret_data,
+              type: 'POST',
+              success: function(res) {
+                  $('#editModal').modal('hide');
+
+                  // Re-populate the grid
+                  GetSchools(1);
+              },
+              error: function(error) {
+                  console.log(error.responseText);
+                  alert(error.responseText);
+              }
+          })   // end of $.ajax
+      });
+
+      $('document').on('click','.navigation li a',function(){
+           console.log('me in');
+      });
+  });
+
+  // This function presents schools, 10 per page
+  function GetSchools(_page) {
+
+    var _offset = (_page - 1) * 10;
+
+    $.ajax({
+        url: '/getSchools',
+        type: 'POST',
+        data: {
+            offset: _offset
+        },
+        success: function(res) {
+
+            var itemsPerPage = 10;
+
+            var schObj = JSON.parse(res);
+
+            // retrive the passed in ui
+            var ui = schObj[2];
+            var data = schObj[0];
+
+            // create the table headers
+            $('#utablerowheader').empty();
+            item = 0;
+            for (var key in ui) {
+              $('#tableHeaderRowTemplate').tmpl(ui[item]).appendTo('#utablerowheader');
+              item += 1;
+            }
+            // add the blank column for the edit controls
+            $('#tableHeaderEndTemplate').tmpl({'label':'edit'}).appendTo('#utablerowheader');
+
+            // fill the table body
+            $('#utablebody').empty();
+            $('#tableTemplate').tmpl(data).appendTo('#utablebody');
+
+            // fill the table body
+            //
+            // clear the table body
+            // for each row of data
+            //    create a new <tr></tr> in the table body with a uniqueid
+            //    for each item in the row of data
+            //        add that item as a <td>item</td> to the <tr id=uniqueid></tr>
+            //    add the final edit controls to the <tr></tr>
+            //
+            // $('#utablebody').empty();
+            // var i = 0;
+            // for (row in data) {
+            //     var rowid = 'utablerowid' + i.toString();
+            //     var rowaddr = '#' + rowid
+            //     var rowiddict = {'value': rowid};
+            //     $('#tableRowTemplate').tmpl(rowiddict).appendTo('#utablbody');
+            //     for (key in ui) {
+            //         var dict = {'value': data[ui[key]['item']]};
+            //         $('#tableRowItemTemplate').tmpl(dict).appendTo(rowaddr);
+            //     }
+            //     $('#tableRowEndTemplate').tmpl().appendTo(rowaddr);
+            //     i = i + 1;
+            // }
+
+            var total = schObj[1]['total'];
+            var pageCount = total / itemsPerPage;
+            var pageRem = total % itemsPerPage;
+            if (pageRem != 0) {
+                pageCount = Math.floor(pageCount) + 1;
+            }
+
+            $('.pagination').empty();
+
+            var pageStart = $('#hdnStart').val();
+            var pageEnd = $('#hdnEnd').val();
+
+            if (pageStart > 5) {
+                var aPrev = $('<a/>').attr({
+                        'href': '#'
+                    }, {
+                        'aria-label': 'Previous'
+                    })
+                    .append($('<span/>').attr('aria-hidden', 'true').html('&laquo;'));
+
+                $(aPrev).click(function() {
+                    $('#hdnStart').val(Number(pageStart) - 5);
+                    $('#hdnEnd').val(Number(pageStart) - 5 + 4);
+                    GetUsers(Number(pageStart) - 5);
+                });
+
+                var prevLink = $('<li/>').append(aPrev);
+                $('.pagination').append(prevLink);
+            }
+
+            for (var i = Number(pageStart); i <= Number(pageEnd); i++) {
+
+                if (i > pageCount) {
+                    break;
+                }
+
+                var aPage = $('<a/>').attr('href', '#').text(i);
+
+                $(aPage).click(function(i) {
+                    return function() {
+                        GetSchools(i);
+                    }
+                }(i));
+                var page = $('<li/>').append(aPage);
+
+                if ((_page) == i) {
+                    $(page).attr('class', 'active');
+                }
+
+                $('.pagination').append(page);
+            }
+
+            if ((Number(pageStart) + 5) <= pageCount) {
+                var nextLink = $('<li/>').append($('<a/>').attr({
+                        'href': '#'
+                    }, {
+                        'aria-label': 'Next'
+                    })
+                    .append($('<span/>').attr('aria-hidden', 'true').html('&raquo;').click(function() {
+                        $('#hdnStart').val(Number(pageStart) + 5);
+                        $('#hdnEnd').val(Number(pageStart) + 5 + 4);
+                        GetSchools(Number(pageStart) + 5);
+
+                    })));
+                $('.pagination').append(nextLink);
+            }
+
+        },
+        error: function(error) {
+            console.log(error);
+        }
+    });
+  }
+
+  function ConfirmDelete(elem) {
+      localStorage.setItem('deleteId', $(elem).attr('data-id'));
+      $('#deleteModal').modal();
+  }
+
+  function Delete() {
+      $.ajax({
+          url: '/deleteSchool',
+            data: {
+                id: localStorage.getItem('deleteId')
+            },
+            type: 'POST',
+            success: function(res) {
+                var result = JSON.parse(res);
+                if (result.status == 'OK') {
+                    $('#deleteModal').modal('hide');
+                    GetSchools(1);
+                } else {
+                    alert(result.status);
+                }
+            },
+            error: function(error) {
+                console.log(error);
+            }
+      });
+  }
+
+  function Edit(elm) {
+      localStorage.setItem('editId',$(elm).attr('data-id'));
+      $.ajax({
+          url: '/getSchoolById',
+          data: {
+              id: $(elm).attr('data-id')
+          },
+          type: 'POST',
+          success: function(res) {
+              var data = JSON.parse(res);
+
+              // use res to get school.ui & school.attrs (the data)
+              var school = data[0]
+              var ui2 = data[1]
+
+              // store the ui object as a string in localStorage
+              var count = 0;
+              for (var key in ui2){
+                  count += 1;
+              }
+
+              localStorage.setItem('uiCount', count)
+              var i = 0;
+              for (var key in ui2){
+                lbl = 'ui' + i.toString();
+                localStorage.setItem(lbl, JSON.stringify(ui2[key]));
+                i += 1;
+              }
+
+              // clear the edit modal form
+              $('#editform').empty();
+
+              // iterate over the ui keys and build the form
+              for (var key in ui2) {
+                  var rowObj = ui2[key];
+
+                  // create the edit field
+                  if ((rowObj['edit_type'] == 'text') || (rowObj['edit_type'] == 'number')) {
+                      $('#editTextTemplate').tmpl(rowObj).appendTo('#editform');
+                  } else {
+
+                      $('#editSelectTemplate').tmpl(rowObj).appendTo('#editform');
+                      var sn = '#' + rowObj['edit_name']
+
+                      var _options = rowObj['select_options']
+                      for (var skey in _options) {
+                          var sel_opts = {};
+                          sel_opts['label'] = skey;
+                          sel_opts['value'] = _options[skey];
+                          $('#editOptionTemplate').tmpl(sel_opts).appendTo(sn);
+                      }
+                  }
+                  // set the data to the edit field
+                  var en = '#' + rowObj['edit_name']
+                  $(en).val(school[rowObj['item']]);
+              }
+
+              $('#editModal').modal();
+          },
+          error: function(error) {
+              console.log(error);
+          }
+      });
+  }
+  </script>
+
+  <style>
+      .trash {
+          color: rgb(209, 91, 71);
+      }
+      .panel-body .checkbox {
+          display: inline-block;
+          margin: 0px;
+      }
+      .list-group {
+          margin-bottom: 0px;
+      }
+  </style>
+
+  <style>
+      .btn-file {
+          position: relative;
+          overflow: hidden;
+      }
+      .btn-file input[type=file] {
+          position: absolute;
+          top: 0;
+          right: 0;
+          min-width: 100%;
+          min-height: 100%;
+          font-size: 100px;
+          text-align: right;
+          filter: alpha(opacity=0);
+          opacity: 0;
+          outline: none;
+          background: white;
+          cursor: inherit;
+          display: block;
+      }
+  </style>
+
+{% endblock %}
+
+{% block content %}
+
+  <div class="container-fluid">
+    <div class="header">
+    </div>
+      <h2>School List</h2>
+
+    <script id="tableHeaderRowTemplate" type="text/x-jQuery-tmpl">
+      <th>${label}</th>
+    </script>
+
+    <script id="tableHeaderEndTemplate" type="text/x-jQuery-tmpl">
+      <th>${label}</th>
+    </script>
+
+    <script id="tableRowTemplate" type="text/x-jQuery-tmpl">
+      <tr id=${value}>
+      </tr>
+    </script>
+
+    <script id="tableRowItemTemplate" type="text/x-jQuery-tmpl">
+      <td>${value}</td>
+    </script>
+
+    <script id="tableRowEndTemplate" type="text/x-jQuery-tmpl">
+      <td>
+        <div class="pull-right action-buttons">
+          <a data-id=${school_id} onclick="Edit(this)"><span class="glyphicon glyphicon-pencil"></span></a>
+          <a data-id=${school_id} onclick="ConfirmDelete(this)" ><span class="glyphicon glyphicon-trash"></span></a>
+        </div>
+      </td>
+    </script>
+
+<!-- figure out how to data drive the following -->
+    <script id="tableTemplate" type="text/x-jQuery-tmpl">
+      <tr>
+        <td>${name}</td>
+        <td>${main_ins_id}</td>
+        <td>${region}</td>
+        <td>${street}</td>
+        <td>${street2}</td>
+        <td>${city}</td>
+        <td>${state}</td>
+        <td>${postal_code}</td>
+        <td>${country}</td>
+        <td>${email}</td>
+        <td>${phone}</td>
+        <td>${status}</td>
+        <td>${standing}</td>
+        <td>
+          <div class="pull-right action-buttons">
+            <a data-id=${school_id} onclick="Edit(this)"><span class="glyphicon glyphicon-pencil"></span></a>
+            <a data-id=${school_id} onclick="ConfirmDelete(this)" ><span class="glyphicon glyphicon-trash"></span></a>
+          </div>
+        </td>
+      </tr>
+    </script>
+
+    <table class="table">
+      <thead id="utableheader">
+        <tr id="utablerowheader">
+          <!--the table headers are created dynamically -->
+        </tr>
+      </thead>
+      <tbody id="utablebody">
+        <tr id="utablerowbody">
+          <!-- the table rows are created dynamically -->
+        </tr>
+      </tbody>
+    </table>
+    <nav>
+      <ul class="pagination">
+          <!-- Pagination li created dynamically -->
+      </ul>
+    </nav>
+
+    <!-- Scripts for the following Modial Dialog for Editing -->
+    <script id="editTextTemplate" type="text/x-jQuery-tmpl">
+      <div class="form-group">
+      <label for=${edit_name} class="control-label">${label}</label>
+      <input type="text" class="form-control" id=${edit_name}>
+      </div>
+    </script>
+
+    <script id="editSelectTemplate" type="text/x-jQuery-tmpl">
+      <div class="form-group">
+      <label for=${edit_name} class="control-label">${label}</label>
+      <select class="form-control" id=${edit_name}>
+      </select>
+      </div>
+    </script>
+
+    <script id="editOptionTemplate" type="text/x-jQuery-tmpl">
+      <option value=${value}>${label}</option>
+    </script>
+
+    <!-- Modal Dialog Box to Edit the List Entry -->
+    <div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span>
+                    </button>
+                    <h4 class="modal-title" id="editModalLabel">Update User</h4>
+                </div>
+                <div class="modal-body">
+                    <form role="form" id="editform">
+                      <!-- form contents creted dynamically using templates above -->
+                    </form>
+                </div>
+
+                <!-- Update and Close buttons -->
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <!-- the following does not need a onclick call due
+                        to the ('#btnUpdate').click(function() -->
+                    <button type="button" id="btnUpdate" class="btn btn-primary">Update</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Dialog Box to Delete the List Entry-->
+    <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header" style="text-align:center;">
+                    <h4 class="modal-title" style="color:red;" id="deleteModalLabel">Confirm Delete School!!</h4>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="Delete()">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- hidden input fields to store values -->
+    <input type="hidden" id="hdnStart" value="1" />
+    <input type="hidden" id="hdnEnd" value="5"/>
+
+  </div>
+
+{% endblock %}

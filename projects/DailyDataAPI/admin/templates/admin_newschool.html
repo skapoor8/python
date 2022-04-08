@@ -1,0 +1,84 @@
+{% extends "admin_layout.html" %}
+
+{% block head %}
+
+<style>
+  input {
+    display: inline-block;
+    margin: 5px;
+    width: 250px  !important;
+  }
+  select {
+    display: inline-block;
+    margin: 5px;
+    width: 105px  !important;
+  }
+  label {
+    display: inline-block;
+    margin: 5px;
+    min-width: 15ch !important;
+  }
+</style>
+
+{% endblock %}
+{% block content %}
+
+<div class="container-fluid">
+
+  <h3>Enter New School</h3>
+
+  <form class="form-inline" action="/newSchool" method="POST">
+
+    <div class="container-fluid">
+
+<!--
+    {% for key in ui.keys() %}
+      <div class="form-group col-sm-4">
+        <label for="{{ ui[key][1] }}">{{ ui[key][0] }}</label>
+        {% if ui[key][2] == "text" or ui[key][2] == "number" or ui[key][0] == "email" %}
+          <input type="{{ ui[key][2] }}" name="{{ ui[key][1] }}" id="{{ ui[key][1] }}" class="form-control" placeholder="{{ ui[key][3] }}" required autofocus>
+        {% endif %}
+        {% if ui[key][2] == "select" %}
+          <select class="form-control" name="{{ ui[key][1] }}" id="{{ ui[key][1] }}" required autofocus>
+          {% for row in  ui[key][4].keys() %}
+            <option value="{{ ui[key][4][row] }}">{{ row }}</option>
+          {% endfor %}
+          </select>
+        {% endif %}
+      </div>
+    {% endfor %}
+-->
+
+    {% for key in ui2.keys() %}
+      <div class="form-group col-sm-4">
+        <label for="{{ ui2[key]['edit_name'] }}">{{ ui2[key]['label'] }}</label>
+        {% if ui2[key]['edit_type'] == "text" or ui2[key]['edit_type'] == "number" or ui2[key]['edit_type'] == "email" %}
+          <input type="{{ ui2[key]['edit_type'] }}" name="{{ ui2[key]['edit_name'] }}" id="{{ ui2[key]['edit_name'] }}" class="form-control" placeholder="{{ ui2[key]['placeholder'] }}" required autofocus>
+        {% endif %}
+        {% if ui2[key]['edit_type'] == "select" %}
+          <select class="form-control" name="{{ ui2[key]['edit_name'] }}" id="{{ ui2[key]['edit_name'] }}" required autofocus>
+          {% for row in  ui2[key]['select_options'].keys() %}
+            <option value="{{ ui2[key]['select_options'][row] }}">{{ row }}</option>
+          {% endfor %}
+          </select>
+        {% endif %}
+      </div>
+    {% endfor %}
+
+    </div>
+
+    <div class="container-fluid"
+      <div class="btn-group-sm col-sm-4">
+      <button id="btnSubmit" class="btn btn-primary" type="submit">Submit</button>
+      </div>
+    </div>
+
+  </form>
+</div>
+
+<div class="container">
+  {% if error %}<p class="alert alert-warning"><strong>Error:</strong> {{ error }}{% endif %}
+  {% if success %}<p class="alert alert-success"><strong>Success:</strong> {{ success }}{% endif %}
+</div>
+
+{% endblock %}

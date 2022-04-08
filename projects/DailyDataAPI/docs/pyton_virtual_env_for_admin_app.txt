@@ -1,0 +1,7 @@
+The following is the Virtual Environment used for both the Admin App and all Tests
+
+python 3.6
+pip3
+flask
+pytest
+wheel

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Oom Yung Doe Roster Admin</title>
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
+<link rel="stylesheet" href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.min.css">
+<link href="http://getbootstrap.com/examples/jumbotron-narrow/jumbotron-narrow.css" rel="stylesheet">
+<link href="../static/signin.css" rel="stylesheet">
+
+<script src="../static/js/jquery-3.2.1.js"></script>
+<script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/jquery.templates/beta1/jquery.tmpl.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
+<script src="../static/js/jquery.ui.widget.js"></script>
+
+<link rel=stylesheet type=text/css href="{{ url_for('static', filename='styles.css') }}">
+
+  {% block head %}
+
+  {% endblock %}
+
+</head>
+
+<body>
+  <nav class="navbar navbar-inverse">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <a class="navbar-brand" href="#">OYD Roster Admin</a>
+    </div>
+    {% if session.user == NULL %}
+      <ul class="nav navbar-nav navbar-right">
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            {% for message in messages %}
+              <li><a>{{ message }}</a></li>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+        <li class="active"><a href="{{ url_for('login') }}"><span class="glyphicon glyphicon-log-in"></span> Login</a></li>
+      </ul>
+    {% else %}
+      <ul class="nav navbar-nav">
+        <li><a href="{{ url_for('index') }}">Users</a></li>
+        <li><a href="{{ url_for('newUser') }}">Add User</a></li>
+        <li><a href="{{ url_for('schools') }}">Schools</a></li>
+        <li><a href="{{ url_for('newSchool') }}">Add School</a></li>
+        <li><a href="#">Page 2</a></li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            {% for message in messages %}
+              <li><a>{{ message }}</a></li>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+        <li class="active"><a href="{{ url_for('logout') }}"><span class="glyphicon glyphicon-log-out"></span> Logout</a></li>
+      </ul>
+    {% endif %}
+  </div>
+  </nav>
+
+  {% block content %}
+
+  {% endblock %}
+
+</body>
+<footer class="footer">
+  <div class="well-sm">&copy; Company 2017</div>
+</footer>
+</html>

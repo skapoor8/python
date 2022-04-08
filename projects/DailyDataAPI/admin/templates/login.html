@@ -1,0 +1,22 @@
+{% extends "admin_layout.html" %}
+{% block content %}
+  <!-- load style sheet specific to signin -->
+  <!-- <link href="../static/css/signup.css" rel="stylesheet"> -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='signin.css') }}">
+
+  <div class="container">
+    <div class="jumbotron">
+      <h2>Sign in</h2>
+      <form class="form-signin" action="/validateLogin" method="POST">
+        <label for="inputUserName" class="sr-only">User Name</label>
+        <input type="username" name="inputUserName" id="inputEmail" class="form-control" placeholder="Username" required autofocus>
+        <label for="inputPassword" class="sr-only">Password</label>
+        <input type="password" name="inputPassword" id="inputPassword" class="form-control" placeholder="Password" required>
+
+        <button id="btnSignIn" class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
+      </form>
+      {% if error %}<p class="alert alert-warning"><strong>Error:</strong> {{ error }}{% endif %}
+    </div>
+  </div>
+
+{% endblock %}

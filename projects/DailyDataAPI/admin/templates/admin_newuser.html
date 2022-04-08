@@ -1,0 +1,110 @@
+{% extends "admin_layout.html" %}
+
+{% block head %}
+
+<style>
+  input {
+    display: inline-block;
+    margin: 5px;
+    width: 250px  !important;
+  }
+  select {
+    display: inline-block;
+    margin: 5px;
+    width: 105px  !important;
+  }
+  label {
+    display: inline-block;
+    margin: 5px;
+    min-width: 15ch !important;
+  }
+</style>
+
+{% endblock %}
+{% block content %}
+
+<div class="container-fluid">
+  <h3>Enter New User</h3>
+  <form class="form-inline" action="/newUser" method="POST">
+
+      <div class="form-group col-sm-4">
+      <label for="inputFirstName">First Name:</label>
+      <input type="name" name="inputFirstName" id="inputFirstName" class="form-control" placeholder="First Name" required autofocus>
+      </div>
+
+      <div class="form-group col-sm-4">
+      <label for="inputLastName">Last Name:</label>
+      <input type="name" name="inputLastName" id="inputLastName" class="form-control" placeholder="Last Name" required autofocus>
+      </div>
+
+      <div class="form-group col-sm-4">
+      <label for="inputOYD_ID">OYD Id Number:</label>
+      <input type="name" name="inputOYD_ID" id="inputOYD_ID" class="form-control" placeholder="OYD Id Number" required autofocus>
+      </div>
+
+      <div class="form-group col-sm-4">
+      <label for="inputUsername">Username:</label>
+      <input type="username" name="inputUsername" id="inputUsername" class="form-control" placeholder="Username" required autofocus>
+      </div>
+
+      <div class="form-group col-sm-4">
+      <label for="inputPassword">Password:</label>
+      <input type="password" name="inputPassword" id="inputPassword" class="form-control" placeholder="Password" required autofocus>
+      </div>
+
+      <!-- ??? replace the following with a data drive select-->
+      <!-- Access Level Selector -->
+      <div class="form-group  col-sm-4">
+        <label for="selectAccessLevel">Access Level:</label>
+        <select class="form-control" name="selectAccessLevel" id="selectAccessLevel">
+          <option value="0">Admin</option>
+          <option value="1">National</option>
+          <option value="2">Regional</option>
+          <option value="3">Multi-School</option>
+          <option value="4">School</option>
+          <option value="5" selected="selected">Intern</option>
+        </select>
+      </div>
+
+      <!-- ??? replace the following with a data driven select-->
+      <div class="form-group col-sm-4">
+      <label for="inputDefSchool">Default School:</label>
+      <input type="name" name="inputDefSchool" id="inputDefSchool" class="form-control" placeholder="School" required autofocus>
+      </div>
+
+      <!-- ??? replace the following with a data driven select-->
+      <div class="form-group col-sm-4">
+      <label for="inputDefRegion">Default Region:</label>
+      <input type="name" name="inputDefRegion" id="inputDefRegion" class="form-control" placeholder="Region" required autofocus>
+      </div>
+
+      <!-- ??? replace the following with a data driven select-->
+      <div class="form-group col-sm-4">
+      <label for="inputDefNatArea">Default Nat Area:</label>
+      <input type="name" name="inputDefNatArea" id="inputDefNatArea" class="form-control" placeholder="National Area" required autofocus>
+      </div>
+
+      <!-- ??? replace the following with a data driven select-->
+      <div class="form-group col-sm-4">
+      <label for="inputSchoolList">School List:</label>
+      <input type="name" name="inputSchoolList" id="inputSchoolList" class="form-control" placeholder="School List" required autofocus>
+      </div>
+
+      <!-- ??? replace the following with a data driven select-->
+      <div class="form-group col-sm-4">
+      <label for="inputRegionList">Region List:</label>
+      <input type="name" name="inputRegionList" id="inputRegionList" class="form-control" placeholder="Region List" required autofocus>
+      </div>
+
+      <br>
+      <div class="btn-group-sm col-sm-4">
+      <button id="btnSubmit" class="btn btn-primary" type="submit">Submit</button>
+      </div>
+  </form>
+</div>
+<div class="container">
+  {% if error %}<p class="alert alert-warning"><strong>Error:</strong> {{ error }}{% endif %}
+  {% if success %}<p class="alert alert-success"><strong>Success:</strong> {{ success }}{% endif %}
+</div>
+
+{% endblock %}
